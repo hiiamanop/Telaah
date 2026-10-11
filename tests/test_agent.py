@@ -141,28 +141,47 @@ def test_real_tools_decision_requires_answer_and_confirm(env):
     assert "fokus NYT" in mem.working_memory()
 
 
-def test_cari_dan_unduh_semua_uses_openalex_only_and_survives_failure(env, monkeypatch):
-    proj, mem, sid = env
-    seen = []
-
+def _fake_grabber(seen, new=2, fail=False):
     class Fake:
-        def __init__(self, fail=False):
-            self.fail = fail
-
         def run(self, q, out, n, **kw):
             seen.append((q, n, kw))
-            if self.fail:
+            if fail:
                 raise RuntimeError("diblokir")
-            return 2, 1, 0
+            return new, 1, 0
+    return Fake
 
-    monkeypatch.setattr(agent, "OpenAlexGrabber", lambda: Fake())
+
+def test_cari_dan_unduh_indexes_new_pdfs_right_after_download(env, monkeypatch):
+    proj, mem, sid = env
+    seen, idx = [], []
+    monkeypatch.setattr(agent, "OpenAlexGrabber", _fake_grabber(seen))
+    monkeypatch.setattr(agent.ingest, "ingest_project", lambda p: idx.append(p) or (2, 0, 0))
     fn = {t.name: t for t in agent.build_tools(proj, mem, sid)}["cari_dan_unduh"].fn
     out = fn("gnn", n=5)
-    assert seen == [("gnn", 5, {})] and "openalex: baru=2" in out and "ieee" not in out
+    assert seen == [("gnn", 5, {})] and len(idx) == 1 and "ieee" not in out
+    assert "openalex: baru=2" in out and "Index: baru=2" in out
     with pytest.raises(ValueError):  # IEEE bukan lagi sumber
         fn("gnn", sumber="ieee")
-    monkeypatch.setattr(agent, "OpenAlexGrabber", lambda: Fake(fail=True))
-    assert "openalex: GAGAL (diblokir)" in fn("gnn")
+
+
+def test_cari_dan_unduh_skips_index_when_nothing_new(env, monkeypatch):
+    proj, mem, sid = env
+    monkeypatch.setattr(agent, "OpenAlexGrabber", _fake_grabber([], new=0))
+    monkeypatch.setattr(agent.ingest, "ingest_project", lambda p: 1 / 0)  # tidak boleh dipanggil
+    fn = {t.name: t for t in agent.build_tools(proj, mem, sid)}["cari_dan_unduh"].fn
+    assert "tidak ada yang di-index" in fn("gnn")
+
+
+def test_cari_dan_unduh_keeps_download_when_index_or_source_fails(env, monkeypatch):
+    proj, mem, sid = env
+    monkeypatch.setattr(agent, "OpenAlexGrabber", _fake_grabber([]))
+    def boom(p): raise RuntimeError("kredit habis")
+    monkeypatch.setattr(agent.ingest, "ingest_project", boom)
+    fn = {t.name: t for t in agent.build_tools(proj, mem, sid)}["cari_dan_unduh"].fn
+    out = fn("gnn")
+    assert "openalex: baru=2" in out and "Index GAGAL (kredit habis)" in out and "index_koleksi" in out
+    monkeypatch.setattr(agent, "OpenAlexGrabber", _fake_grabber([], fail=True))
+    assert "openalex: GAGAL (diblokir)" in fn("gnn") and "tidak ada yang di-index" in fn("gnn")
 
 def test_scope_rule_stays_in_system_prompt():
     # perilaku sebenarnya diukur dengan tests/eval_scope.py (LLM sungguhan); ini cuma menjaga aturannya tak terhapus
