@@ -45,16 +45,6 @@ def from_openalex(w):
             "source": "openalex"}
 
 
-def from_ieee(r):
-    year = r.get("publicationYear")
-    return {"title": re.sub(r"<[^>]+>", "", r.get("articleTitle") or ""),
-            "authors": " and ".join(a["preferredName"] for a in r.get("authors") or []
-                                    if a.get("preferredName")),
-            "year": int(year) if str(year).isdigit() else None,
-            "doi": r.get("doi") or "",
-            "abstract": r.get("abstract") or "",
-            "source": "ieee"}
-
 
 def from_filename(name):
     """Nama hasil grabber: YYYY_ID_judul.pdf. Selain itu: judul = nama file."""

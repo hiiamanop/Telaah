@@ -14,7 +14,7 @@ def cite(m):
            else f"{last[0]} dkk.") if last else (m.get("title") or m.get("file", "?"))[:40]
     year = m.get("year") or "t.t."
     page = "abstrak" if m.get("page") == 0 else f"hlm. {m.get('page')}"
-    return f"{who} {year}, {page}"
+    return f"{who} {year}, {page}" + (f" ({m['version']})" if m.get("version") else "")
 
 
 def is_reference_list(text):

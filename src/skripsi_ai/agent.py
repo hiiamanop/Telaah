@@ -13,7 +13,6 @@ from . import llm
 from . import papermeta
 from . import rag
 from . import store
-from .ieee_grab import IeeeGrabber
 from .openalex_grab import OpenAlexGrabber
 from .scopus_grab import ScopusGrabber
 
@@ -181,9 +180,9 @@ def build_tools(proj, mem, sid, out=print):
         return {"total_pdf": len(pdfs), "indexed": sum(f in indexed for f in pdfs), "daftar": rows}
 
     def cari_dan_unduh(query, sumber=None, n=10):
-        """semua = IEEE (grabber IEEE) + OpenAlex untuk terbitan selain IEEE; n berlaku per sumber."""
+        """semua = OpenAlex (salinan OA, atau pracetak arXiv untuk terbitan berbayar; situs IEEE dilewati); n = PDF per sumber."""
         sumber = sumber or "semua"
-        plan = {"semua": ["ieee", "openalex"], "ieee": ["ieee"], "openalex": ["openalex"], "scopus": ["scopus"]}
+        plan = {"semua": ["openalex"], "openalex": ["openalex"], "scopus": ["scopus"]}
         if sumber not in plan:
             raise ValueError(f"sumber harus salah satu dari {sorted(plan)}")
         n = max(1, min(int(n), 50))
@@ -191,10 +190,8 @@ def build_tools(proj, mem, sid, out=print):
         lines = []
         for src in plan[sumber]:
             try:  # satu sumber gagal tidak menghentikan sumber lain
-                if src == "ieee":
-                    r = IeeeGrabber().run(query, proj.papers, n)
-                elif src == "openalex":
-                    r = OpenAlexGrabber().run(query, proj.papers, n, skip_ieee=True)
+                if src == "openalex":
+                    r = OpenAlexGrabber().run(query, proj.papers, n)
                 else:
                     r = ScopusGrabber().run(query, proj.papers, n)
                 lines.append(f"{src}: baru={r[0]}, sudah ada/tanpa PDF={r[1]}, gagal={r[2]}")
@@ -228,12 +225,13 @@ def build_tools(proj, mem, sid, out=print):
     S = {"type": "string"}
     return [
         Tool("daftar_koleksi", "Daftar paper di proyek: judul, tahun, apakah sudah di-index.", {}, [], daftar_koleksi),
-        Tool("cari_dan_unduh", "Cari artikel open access dan unduh PDF-nya ke proyek. Default sumber 'semua': "
-             "IEEE lewat grabber IEEE, dan OpenAlex untuk terbitan selain IEEE. "
+        Tool("cari_dan_unduh", "Cari artikel dan unduh PDF-nya ke proyek. Default sumber 'semua' (OpenAlex). Artikel berbayar diambil "
+             "dari salinan terbuka atau pracetak arXiv bila ada; yang PDF-nya hanya di situs penerbit tidak diunduh "
+             "(pengguna bisa menaruh sendiri di folder papers). "
              "Biarkan sumber kosong kecuali pengguna secara eksplisit menyebut satu sumber.",
-             {"query": S, "sumber": {"type": "string", "enum": ["semua", "ieee", "openalex", "scopus"],
-                         "description": "kosongkan = semua (IEEE + OpenAlex)"},
-              "n": {"type": "integer", "description": "maks artikel per sumber (1-50)"}}, ["query"],
+             {"query": S, "sumber": {"type": "string", "enum": ["semua", "openalex", "scopus"],
+                         "description": "kosongkan = semua (OpenAlex)"},
+              "n": {"type": "integer", "description": "maks PDF per sumber (1-50)"}}, ["query"],
              cari_dan_unduh,
              lambda a: f"Unduh maks {a.get('n', 10)} artikel per sumber ({a.get('sumber', 'semua')}) "
                        f"untuk '{a.get('query')}'?"),
