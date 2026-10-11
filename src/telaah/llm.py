@@ -55,6 +55,21 @@ def chat_tools(messages, tools=None):
         payload["tools"] = tools
     return _post(url, payload, {"Authorization": f"Bearer {key}"})["choices"][0]["message"]
 
+def web_search(query, n=5):
+    """Cari web lewat plugin web OpenRouter (engine Perplexity). Return [{title, url, snippet}].
+    Hanya anotasi sitasi yang dipakai; teks jawaban model dibuang, jadi web tak pernah jadi 'jawaban'."""
+    d = _post("https://openrouter.ai/api/v1/chat/completions",
+              {"model": config.OPENROUTER_CHAT_MODEL, "stream": False, "max_tokens": 64,
+               "plugins": [{"id": "web", "engine": "perplexity", "max_results": n}],
+               "messages": [{"role": "user", "content": query}]},
+              {"Authorization": f"Bearer {config.OPENROUTER_API_KEY}"})
+    out = []
+    for a in d["choices"][0]["message"].get("annotations") or []:
+        c = a.get("url_citation") or {}
+        if str(c.get("url", "")).startswith(("http://", "https://")):
+            out.append({"title": (c.get("title") or "")[:150], "url": c["url"], "snippet": (c.get("content") or "")[:500]})
+    return out[:n]
+
 def chat(messages):
     """Chat via backend config.LLM_BACKEND (openrouter | ninerouter), fallback Ollama."""
     try:

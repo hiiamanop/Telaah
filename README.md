@@ -52,12 +52,14 @@ Pertanyaan di luar topik skripsi ditolak.
 - Artikel yang hanya ada di situs penerbit (tanpa salinan terbuka) **tidak diunduh otomatis**. Taruh PDF-nya sendiri di `data/<proyek>/papers/`, lalu minta index.
 - PDF dari arXiv ditandai `(pracetak)` di sitasi. Nomor halaman dan isinya bisa berbeda dari versi terbitan, jadi cek sebelum mengutip di tulisan Anda.
 - Telaah tidak mengunduh dari situs IEEE Xplore, karena ketentuannya melarang unduh otomatis.
+- **Telusur web (tambahan):** bila jawaban dari koleksi kurang memuaskan, asisten bisa menawarkan penelusuran web lewat plugin web OpenRouter (engine Perplexity, sekitar US$0,006 per penelusuran dari kredit OpenRouter Anda; selalu meminta konfirmasi). Hasilnya ditandai `[web, bukan bukti riset]` dan hanya dipakai untuk menemukan referensi. Web tidak pernah menjadi jawaban berbukti dan tidak bisa menjadi dasar keputusan; untuk menjadikannya bukti, paper yang ditemukan harus diunduh ke koleksi.
 - Pencocokan arXiv memakai judul persis dan nama belakang penulis pertama. Pracetak yang judulnya berubah saat terbit tidak ditemukan.
 
 ## Privasi
 
 - Folder proyek (`data/<proyek>/`) berisi PDF, vector DB, dan `memory.db`. Semuanya di komputer Anda.
 - **OpenRouter** menerima potongan teks paper (untuk embedding), pertanyaan Anda, dan konteks percakapan (untuk model bahasa). Baca kebijakan OpenRouter dan penyedia model bila naskah Anda sensitif.
+- **Perplexity (lewat OpenRouter)** menerima kueri telusur web bila Anda menyetujuinya. Kueri disusun model dan bisa memuat istilah dari topik skripsi Anda.
 - **OpenAlex, arXiv, Crossref** menerima kata kunci pencarian, judul, dan DOI artikel. **Elsevier** menerima kueri pencarian bila Scopus diaktifkan. Isi naskah dan pertanyaan Anda tidak dikirim ke mereka.
 - Telaah tidak punya server sendiri dan tidak mengirim data ke pengembangnya.
 - Chroma (vector DB yang dipakai) punya telemetri anonim yang menyala secara bawaan. Matikan dengan `ANONYMIZED_TELEMETRY=False` di environment.
