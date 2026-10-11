@@ -9,7 +9,7 @@ import urllib.parse
 import urllib.request
 
 OPENALEX = "https://api.openalex.org/works"
-UA = "SkripsiAI/1.0 (mailto:research@example.com)"
+UA = "Telaah/1.0 (mailto:research@example.com)"
 
 
 def sidecar(pdf_path):

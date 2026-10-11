@@ -2,9 +2,9 @@ import json
 
 import pytest
 
-from skripsi_ai import agent
-from skripsi_ai import config
-from skripsi_ai.memory import Memory
+from telaah import agent
+from telaah import config
+from telaah.memory import Memory
 
 
 def call(name, args, cid="c1"):

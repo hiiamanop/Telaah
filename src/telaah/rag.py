@@ -5,7 +5,7 @@ Bukti tak cukup (jarak di atas ambang) -> tidak memanggil LLM. Jawaban = klaim b
 kutipannya terbukti ada (verbatim) di chunk rujukannya yang ditampilkan.
 Setiap tanya dicatat di tabel answers (data/<proyek>/memory.db): pertanyaan, jawaban, bukti, jarak.
 
-Pakai:  python -m skripsi_ai.rag "pertanyaan" [-p proyek] [-k top_k] [--max-dist 0.4]
+Pakai:  python -m telaah.rag "pertanyaan" [-p proyek] [-k top_k] [--max-dist 0.4]
 """
 import argparse
 import time

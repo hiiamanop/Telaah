@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Export literature.csv proyek -> references.bib (BibTeX).
 
-Pakai:  python -m skripsi_ai.export_bib [-p proyek]
+Pakai:  python -m telaah.export_bib [-p proyek]
 """
 import argparse
 import csv

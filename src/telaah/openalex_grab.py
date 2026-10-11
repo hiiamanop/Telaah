@@ -22,7 +22,7 @@ SCAN = 5  # periksa paling banyak 5x maks artikel: banyak terbitan berbayar tak 
 ARXIV_GAP = 3.0
 _last_arxiv = 0.0
 API = "https://api.openalex.org/works"
-UA = "SkripsiAI/1.0 (mailto:research@example.com)"
+UA = "Telaah/1.0 (mailto:research@example.com)"
 
 
 def build_params(arg):

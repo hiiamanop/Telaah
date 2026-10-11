@@ -2,7 +2,7 @@
 """Research partner interaktif. Percakapan dan memori tersimpan di data/<proyek>/memory.db,
 di folder tempat perintah dijalankan.
 
-Pakai:  skripsi-ai [-p proyek] [--resume [id]] [--sesi]
+Pakai:  telaah [-p proyek] [--resume [id]] [--sesi]
 Ketik /keluar untuk selesai (ringkasan sesi dibuat otomatis).
 """
 import argparse
@@ -25,7 +25,7 @@ def ensure_login(ui, force=False):
                 return False
             ui.error(f"Kunci tersimpan tidak lolos: {e}")
     if not (sys.stdin.isatty() and sys.stdout.isatty()):
-        ui.error("Belum terhubung ke OpenRouter. Jalankan di terminal: skripsi-ai --login (atau isi OPENROUTER_API_KEY di .env)")
+        ui.error("Belum terhubung ke OpenRouter. Jalankan di terminal: telaah --login (atau isi OPENROUTER_API_KEY di .env)")
         return False
     if not key or force:
         ui.notice("Aplikasi ini memakai OpenRouter untuk model bahasa dan embedding.")
@@ -74,7 +74,7 @@ def main():
         if sid and mem.db.execute("select 1 from sessions where id=?", (sid,)).fetchone():
             history = agent.trim_history(mem.history(sid))
         else:
-            sys.exit(f"sesi {a.resume or '(terakhir)'} tidak ada. Lihat: skripsi-ai -p {proj.name} --sesi")
+            sys.exit(f"sesi {a.resume or '(terakhir)'} tidak ada. Lihat: telaah -p {proj.name} --sesi")
     sid = sid or mem.new_session()
 
     wm = mem.working_memory()

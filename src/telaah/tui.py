@@ -17,7 +17,7 @@ HELP = [("/bantuan", "daftar perintah"),
         ("/koleksi", "paper di proyek dan status index"),
         ("/memori", "catatan dan keputusan yang tersimpan"),
         ("/riwayat <kata>", "cari di percakapan, jawaban, keputusan, catatan lama"),
-        ("/sesi", "daftar sesi (lanjutkan dengan: skripsi-ai --resume ID)"),
+        ("/sesi", "daftar sesi (lanjutkan dengan: telaah --resume ID)"),
         ("/proyek", "daftar proyek di folder data"),
         ("/keluar", "selesai; ringkasan sesi dibuat otomatis")]
 EXIT = {"/keluar", "/exit", "exit"}
@@ -57,7 +57,7 @@ class UI:
         body.append(f"proyek  {proj.name}\n", style="bold")
         body.append(f"sesi    #{sid}" + (f" (dilanjutkan, {resumed} pesan dimuat)" if resumed else "") + "\n")
         body.append("ketik /bantuan untuk perintah, /keluar untuk selesai", style="dim")
-        self.c.print(Panel(body, title="Skripsi-AI", border_style="cyan", expand=False))
+        self.c.print(Panel(body, title="Telaah", border_style="cyan", expand=False))
 
     def reply(self, text):
         self.c.print(Markdown(text))

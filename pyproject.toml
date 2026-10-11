@@ -1,5 +1,5 @@
 [project]
-name = "skripsi-ai"
+name = "telaah"
 version = "0.1.0"
 description = "Research partner untuk skripsi/tesis/disertasi: kumpulkan artikel, index ke vector DB, tanya dan putuskan berdasarkan bukti."
 readme = "README.md"
@@ -24,7 +24,7 @@ dependencies = [
 Repository = "https://github.com/hiiamanop/skripsi-ai"
 
 [project.scripts]
-skripsi-ai = "skripsi_ai.cli:main"
+telaah = "telaah.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.12.23,<0.13.0"]

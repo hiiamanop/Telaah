@@ -2,10 +2,10 @@ import json
 
 import pytest
 
-from skripsi_ai import config
-from skripsi_ai import evidence as ev
-from skripsi_ai import rag
-from skripsi_ai import store
+from telaah import config
+from telaah import evidence as ev
+from telaah import rag
+from telaah import store
 
 TEXT = ("The proposed XGA-E frame-\nwork reduces false alarms by 12% on the NetFlow dataset. "
         "Sparsity is the proportion of critical components identified by the XAI method.")
@@ -81,7 +81,7 @@ def test_ask_drops_fabricated_claims_keeps_verified(proj, monkeypatch):
     assert [c["ok"] for c in r["claims"]] == [True, False]
     shown = rag.format_result(r)
     assert "1 klaim dibuang" in shown and "juara" not in shown and "maknanya tetap perlu Anda nilai" in shown
-    from skripsi_ai import memory
+    from telaah import memory
     saved = memory.Memory(proj).answer(r["answer_id"])
     assert [c["ok"] for c in saved["claims"]] == [True, False]  # klaim dibuang tetap tercatat untuk audit
 
@@ -104,7 +104,7 @@ def test_ask_retries_once_on_bad_json_then_gives_up(proj, monkeypatch):
 
 def test_memory_v1_migrates_to_v2(tmp_path, monkeypatch):
     import sqlite3
-    from skripsi_ai import memory
+    from telaah import memory
     monkeypatch.setattr(config, "PROJECTS_DIR", str(tmp_path))
     p = config.Project("m").ensure()
     c = sqlite3.connect(f"{p.dir}/memory.db")

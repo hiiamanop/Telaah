@@ -1,4 +1,4 @@
-# Skripsi-AI
+# Telaah
 
 Research partner pribadi untuk skripsi / tesis / disertasi. Visi: kumpulkan artikel, baca, simpan ke vector DB, lalu setiap jawaban dan keputusan riset berbasis bukti dari referensi yang terkumpul.
 
@@ -7,31 +7,31 @@ Research partner pribadi untuk skripsi / tesis / disertasi. Visi: kumpulkan arti
 Butuh [uv](https://docs.astral.sh/uv/). Dari folder kerja skripsi Anda:
 
 ```
-uvx skripsi-ai -p skripsi        # nama proyek bebas; data tersimpan di ./data/skripsi/
+uvx telaah -p skripsi        # nama proyek bebas; data tersimpan di ./data/skripsi/
 ```
 
 Saat pertama jalan, aplikasi meminta API key [OpenRouter](https://openrouter.ai/keys) (ketikan tersembunyi), menguji koneksinya, dan baru masuk ke antarmuka bila lolos.
-Kunci disimpan di `~/.config/skripsi-ai/credentials.json` (izin 0600, di luar folder proyek). Perintah terkait:
+Kunci disimpan di `~/.config/telaah/credentials.json` (izin 0600, di luar folder proyek). Perintah terkait:
 
 ```
-skripsi-ai --login               # masukkan ulang kunci
-skripsi-ai --logout              # hapus kunci tersimpan
+telaah --login               # masukkan ulang kunci
+telaah --logout              # hapus kunci tersimpan
 ```
 
 Alternatif: isi `OPENROUTER_API_KEY` di `.env` folder kerja (menang atas kunci tersimpan; tetap dites tiap start). Opsional: `ELSEVIER_API_KEY` untuk sumber Scopus.
 Model bahasa bawaan: `deepseek/deepseek-v4.1-flash` (ubah dengan `OPENROUTER_CHAT_MODEL`).
 
 Dalam sesi, ketik biasa (cari artikel, index, tanya, catat keputusan) atau perintah `/bantuan`.
-Lanjutkan sesi: `uvx skripsi-ai -p skripsi --resume`. Daftar sesi: `--sesi`.
+Lanjutkan sesi: `uvx telaah -p skripsi --resume`. Daftar sesi: `--sesi`.
 Percakapan, jawaban berbukti, keputusan, dan catatan tersimpan di `data/<proyek>/memory.db`.
 
 ## Pengembangan
 
 ```
 uv venv && uv pip install -e . pytest
-.venv/bin/python run.py -p uji     # atau: python -m skripsi_ai
+.venv/bin/python run.py -p uji     # atau: python -m telaah
 .venv/bin/python -m pytest -q tests
 uv build                            # hasil di dist/
 ```
 
-Kode ada di `src/skripsi_ai/`. Modul tunggal bisa dijalankan: `python -m skripsi_ai.ingest -p skripsi`.
+Kode ada di `src/telaah/`. Modul tunggal bisa dijalankan: `python -m telaah.ingest -p skripsi`.

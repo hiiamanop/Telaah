@@ -1,5 +1,5 @@
 """Kunci API OpenRouter: dimasukkan pengguna saat onboarding, dites ke OpenRouter, disimpan di
-~/.config/skripsi-ai/credentials.json (0600, di luar folder proyek)."""
+~/.config/telaah/credentials.json (0600, di luar folder proyek)."""
 import json
 import os
 import urllib.error
@@ -14,7 +14,7 @@ class LoginError(Exception):
 
 def cred_path():
     base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
-    return os.path.join(base, "skripsi-ai", "credentials.json")
+    return os.path.join(base, "telaah", "credentials.json")
 
 
 def save_key(key):
@@ -44,7 +44,7 @@ def clear_key():
 
 
 def _get(key):
-    req = urllib.request.Request(CHECK_URL, headers={"Authorization": f"Bearer {key}", "User-Agent": "skripsi-ai"})
+    req = urllib.request.Request(CHECK_URL, headers={"Authorization": f"Bearer {key}", "User-Agent": "telaah"})
     with urllib.request.urlopen(req, timeout=20) as r:
         return r.status
 

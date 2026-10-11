@@ -4,7 +4,7 @@ import urllib.error
 
 import pytest
 
-from skripsi_ai import auth
+from telaah import auth
 
 
 @pytest.fixture(autouse=True)
@@ -65,7 +65,7 @@ class _UI:
     def error(self, m): self.out.append("ERR " + m)
 
 def test_gate_blocks_bad_env_key_and_passes_good(monkeypatch):
-    from skripsi_ai import cli, config
+    from telaah import cli, config
     monkeypatch.setenv("OPENROUTER_API_KEY", "dari-env")
     monkeypatch.setattr(config, "OPENROUTER_API_KEY", "dari-env")
     monkeypatch.setattr(auth, "_get", _http(401))
@@ -75,7 +75,7 @@ def test_gate_blocks_bad_env_key_and_passes_good(monkeypatch):
     assert cli.ensure_login(_UI()) is True
 
 def test_gate_non_tty_without_key_refuses(monkeypatch):
-    from skripsi_ai import cli, config
+    from telaah import cli, config
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     monkeypatch.setattr(config, "OPENROUTER_API_KEY", "")
     ui = _UI()  # pytest: stdin bukan TTY
@@ -83,7 +83,7 @@ def test_gate_non_tty_without_key_refuses(monkeypatch):
 
 def test_config_prefers_env_over_saved_key(monkeypatch, tmp_path):
     import importlib
-    from skripsi_ai import config
+    from telaah import config
     auth.save_key("dari-login")
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     monkeypatch.chdir(tmp_path)  # tanpa .env
@@ -96,7 +96,7 @@ def test_config_prefers_env_over_saved_key(monkeypatch, tmp_path):
 
 def test_default_chat_model_is_pinned_not_alias():
     import os
-    from skripsi_ai import config
+    from telaah import config
     if "OPENROUTER_CHAT_MODEL" not in os.environ:
         assert config.OPENROUTER_CHAT_MODEL == "deepseek/deepseek-v4.1-flash"
     assert "latest" not in "deepseek/deepseek-v4.1-flash"

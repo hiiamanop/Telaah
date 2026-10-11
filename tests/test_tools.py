@@ -1,15 +1,15 @@
 import io
 import json
 
-from skripsi_ai.grabbers import detect_source
+from telaah.grabbers import detect_source
 
 def test_bibtex_helpers():
-    from skripsi_ai.bibtex import keywords, key
+    from telaah.bibtex import keywords, key
     assert keywords("2021_123_A Study of Graph Neural Networks for Traffic.pdf") == "study graph neural networks traffic"
     assert key("Ada Lovelace and Alan Turing", "2021", "A Study") == "Lovelace2021A"
 
 def test_crossref_lookup(monkeypatch):
-    from skripsi_ai import crossref
+    from telaah import crossref
     item = {"DOI": "10.1/x", "title": ["Graph neural networks for traffic"], "author": [{"given": "Ada", "family": "Lovelace"}],
             "container-title": ["J"], "published": {"date-parts": [[2021]]}, "URL": "http://x"}
     body = {"message": {"items": [item]}}
@@ -25,7 +25,7 @@ def test_detect_source():
     assert detect_source("https://openalex.org/works?search=x") == "openalex"
 
 def test_openalex_params():
-    from skripsi_ai.openalex_grab import build_params, pdf_urls, fname
+    from telaah.openalex_grab import build_params, pdf_urls, fname
     p = build_params("https://openalex.org/works?search=trust&filter=from_publication_date%3A2021-01-01")
     assert p["search"] == "trust" and p["filter"] == "from_publication_date:2021-01-01"  # tidak dipaksa OA
     q = build_params("raw query")
@@ -43,7 +43,7 @@ def test_openalex_params():
                        {"is_oa": False, "pdf_url": "http://closed.pdf"}]}
     assert pdf_urls(w) == ["https://arxiv.org/pdf/2103.00710", "https://notieee.org.example.com/a.pdf"]
     # terbitan berbayar: tanpa salinan OA -> pracetak arXiv; ada salinan OA -> arXiv tak dicari
-    from skripsi_ai.openalex_grab import candidates, arxiv_pdf, is_preprint
+    from telaah.openalex_grab import candidates, arxiv_pdf, is_preprint
     paywalled = {"display_name": "T", "locations": [{"is_oa": False, "pdf_url": None}]}
     assert candidates(paywalled, lambda w: "https://arxiv.org/pdf/1") == ["https://arxiv.org/pdf/1"]
     assert candidates(paywalled, lambda w: None) == []
@@ -54,7 +54,7 @@ def test_openalex_params():
 
 def test_arxiv_title_match_must_be_exact(monkeypatch):
     import io
-    from skripsi_ai import openalex_grab as o
+    from telaah import openalex_grab as o
     feed = ('<feed xmlns="http://www.w3.org/2005/Atom"><entry><id>http://arxiv.org/abs/2103.00710v2</id>'
             '<title>Federated  Learning: A Survey</title><author><name>Ada Lovelace</name></author></entry></feed>')
     monkeypatch.setattr(o, "ARXIV_GAP", 0)
@@ -68,7 +68,7 @@ def test_arxiv_title_match_must_be_exact(monkeypatch):
 
 def test_project_paths_and_validation(monkeypatch):
     import pytest
-    from skripsi_ai import config
+    from telaah import config
     monkeypatch.setattr(config, "PROJECTS_DIR", "/tmp/x")
     p = config.Project("skripsi-a")
     assert p.papers == "/tmp/x/skripsi-a/papers" and p.chroma == "/tmp/x/skripsi-a/chroma"
@@ -77,13 +77,13 @@ def test_project_paths_and_validation(monkeypatch):
             config.Project(bad)
 
 def test_project_ensure_isolated(tmp_path, monkeypatch):
-    from skripsi_ai import config
+    from telaah import config
     monkeypatch.setattr(config, "PROJECTS_DIR", str(tmp_path))
     config.Project("a").ensure(); config.Project("b").ensure()
     assert (tmp_path / "a/papers").is_dir() and (tmp_path / "b/papers").is_dir()
 
 def test_scopus_helpers():
-    from skripsi_ai.scopus_grab import scopus_query, entry_dois
+    from telaah.scopus_grab import scopus_query, entry_dois
     assert scopus_query("graph neural") == "(TITLE-ABS-KEY(graph neural)) AND OPENACCESS(1)"
     assert scopus_query("AUTHOR-NAME(Smith)") == "(AUTHOR-NAME(Smith)) AND OPENACCESS(1)"
     assert scopus_query("TITLE(x) AND OPENACCESS(1)") == "TITLE(x) AND OPENACCESS(1)"
@@ -91,7 +91,7 @@ def test_scopus_helpers():
     assert entry_dois(es) == ["10.1/a"]
 
 def test_papermeta(tmp_path):
-    from skripsi_ai import papermeta as pm
+    from telaah import papermeta as pm
     w = {"display_name": "T", "publication_year": 2021, "doi": "https://doi.org/10.1/X",
          "authorships": [{"author": {"display_name": "Ada L"}}, {"author": {"display_name": "Alan T"}}],
          "abstract_inverted_index": {"hello": [0], "world": [1]}}
@@ -107,7 +107,7 @@ def test_papermeta(tmp_path):
 
 def test_ingest_one_metadata_pages_batches(tmp_path, monkeypatch):
     import chromadb
-    from skripsi_ai import config, ingest
+    from telaah import config, ingest
     calls = []
     monkeypatch.setattr(ingest.llm, "embed", lambda ts: calls.append(len(ts)) or [[1.0, 0.0]] * len(ts))
     monkeypatch.setattr(config, "EMBED_BATCH", 2)
@@ -120,7 +120,7 @@ def test_ingest_one_metadata_pages_batches(tmp_path, monkeypatch):
 
 def test_ingest_failure_leaves_nothing(tmp_path, monkeypatch):
     import chromadb
-    from skripsi_ai import ingest
+    from telaah import ingest
     def boom(ts): raise RuntimeError("api")
     monkeypatch.setattr(ingest.llm, "embed", boom)
     col = chromadb.PersistentClient(path=str(tmp_path)).get_or_create_collection("papers")
@@ -132,7 +132,7 @@ def test_ingest_failure_leaves_nothing(tmp_path, monkeypatch):
 
 def test_store_guards_embed_model(tmp_path, monkeypatch):
     import pytest
-    from skripsi_ai import config, store
+    from telaah import config, store
     monkeypatch.setattr(config, "PROJECTS_DIR", str(tmp_path))
     p = config.Project("a").ensure()
     col = store.open_collection(p, create=True)
@@ -144,7 +144,7 @@ def test_store_guards_embed_model(tmp_path, monkeypatch):
     assert store.open_collection(p, create=True, reset=True).count() == 0
 
 def test_evidence_cite_and_select():
-    from skripsi_ai import evidence as ev
+    from telaah import evidence as ev
     assert ev.cite({"authors": "Fupeng Wei and Xing Liu and L Pan", "year": 2025, "page": 6}) == "Wei dkk. 2025, hlm. 6"
     assert ev.cite({"authors": "Ada Lovelace and Alan Turing", "year": 2021, "page": 0}) == "Lovelace dan Turing 2021, abstrak"
     assert ev.cite({"authors": "Ada Lovelace", "year": 2021, "page": 2, "version": "pracetak"}) == "Lovelace 2021, hlm. 2 (pracetak)"
@@ -159,7 +159,7 @@ def test_evidence_cite_and_select():
 def test_ask_refuses_without_evidence(tmp_path, monkeypatch):
     import pytest
     import json
-    from skripsi_ai import config, rag, store
+    from telaah import config, rag, store
     monkeypatch.setattr(config, "PROJECTS_DIR", str(tmp_path))
     p = config.Project("a").ensure()
     col = store.open_collection(p, create=True)
@@ -174,7 +174,7 @@ def test_ask_refuses_without_evidence(tmp_path, monkeypatch):
     monkeypatch.setattr(rag.llm, "chat", lambda m: (raw, "fake"))
     r = rag.ask(p, "apa saja")
     assert r["status"] == "unverified" and r["claims"][0]["reason"] == "kutipan terlalu pendek"
-    from skripsi_ai import memory
+    from telaah import memory
     m = memory.Memory(p)
     rows = m.db.execute("select id, status from answers order by id").fetchall()
     assert [x["status"] for x in rows] == ["no_evidence", "unverified"] and r["answer_id"] == rows[1]["id"]
