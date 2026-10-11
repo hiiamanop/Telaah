@@ -3,12 +3,10 @@ import urllib.parse
 
 
 def detect_source(url_or_query):
-    """Return 'ieee' | 'scopus' | 'other'."""
+    """Return 'scopus' | 'openalex' | 'other'."""
     if not url_or_query.startswith("http"):
         return "other"
     netloc = urllib.parse.urlparse(url_or_query).netloc
-    if "ieeexplore" in netloc:
-        return "ieee"
     if "scopus" in netloc:
         return "scopus"
     if "openalex" in netloc:

@@ -19,7 +19,7 @@ def test_crossref_lookup(monkeypatch):
     assert crossref.lookup("judul lain sekali xyzabc", 2021) is None
 
 def test_detect_source():
-    assert detect_source("https://ieeexplore.ieee.org/search/searchresult.jsp?queryText=x") == "ieee"
+    assert detect_source("https://ieeexplore.ieee.org/search/searchresult.jsp?queryText=x") == "other"
     assert detect_source("https://www.scopus.com/results/results.uri?sort=plf-f") == "scopus"
     assert detect_source("some raw query string") == "other"
     assert detect_source("https://openalex.org/works?search=x") == "openalex"
@@ -27,17 +27,44 @@ def test_detect_source():
 def test_openalex_params():
     from skripsi_ai.openalex_grab import build_params, pdf_urls, fname
     p = build_params("https://openalex.org/works?search=trust&filter=from_publication_date%3A2021-01-01")
-    assert p["search"] == "trust" and "is_oa" in p["filter"]
+    assert p["search"] == "trust" and p["filter"] == "from_publication_date:2021-01-01"  # tidak dipaksa OA
     q = build_params("raw query")
-    assert q["search"] == "raw query" and q["filter"] == "is_oa:true"
-    x = build_params("raw query", skip_ieee=True)
-    assert x["filter"] == "is_oa:true,primary_location.source.host_organization_lineage:!P4310319808"
-    assert "host_organization_lineage" not in build_params("raw query")["filter"]
+    assert q["search"] == "raw query" and "filter" not in q
     w = {"id": "https://openalex.org/W1", "publication_year": 2021, "display_name": "T!",
          "best_oa_location": {"pdf_url": "http://a.pdf"},
          "locations": [{"is_oa": True, "pdf_url": "http://b.pdf"}]}
     assert pdf_urls(w) == ["http://a.pdf", "http://b.pdf"]
     assert fname(w).startswith("2021_W1_")
+    # ketentuan IEEE: tautan situs IEEE tak pernah dipakai; salinan arXiv/repositori tetap
+    w = {"best_oa_location": {"pdf_url": "https://ieeexplore.ieee.org/ielx7/1/2/3.pdf"},
+         "locations": [{"is_oa": True, "pdf_url": "https://ieeexplore.ieee.org/x.pdf"},
+                       {"is_oa": True, "pdf_url": "https://arxiv.org/pdf/2103.00710"},
+                       {"is_oa": True, "pdf_url": "https://notieee.org.example.com/a.pdf"},
+                       {"is_oa": False, "pdf_url": "http://closed.pdf"}]}
+    assert pdf_urls(w) == ["https://arxiv.org/pdf/2103.00710", "https://notieee.org.example.com/a.pdf"]
+    # terbitan berbayar: tanpa salinan OA -> pracetak arXiv; ada salinan OA -> arXiv tak dicari
+    from skripsi_ai.openalex_grab import candidates, arxiv_pdf, is_preprint
+    paywalled = {"display_name": "T", "locations": [{"is_oa": False, "pdf_url": None}]}
+    assert candidates(paywalled, lambda w: "https://arxiv.org/pdf/1") == ["https://arxiv.org/pdf/1"]
+    assert candidates(paywalled, lambda w: None) == []
+    boom = lambda w: 1 / 0
+    assert candidates({"best_oa_location": {"pdf_url": "http://a.pdf"}}, boom) == ["http://a.pdf"]
+    assert is_preprint("https://arxiv.org/pdf/1") and not is_preprint("https://x.org/arxiv.org.pdf")
+
+
+def test_arxiv_title_match_must_be_exact(monkeypatch):
+    import io
+    from skripsi_ai import openalex_grab as o
+    feed = ('<feed xmlns="http://www.w3.org/2005/Atom"><entry><id>http://arxiv.org/abs/2103.00710v2</id>'
+            '<title>Federated  Learning: A Survey</title><author><name>Ada Lovelace</name></author></entry></feed>')
+    monkeypatch.setattr(o, "ARXIV_GAP", 0)
+    monkeypatch.setattr(o.urllib.request, "urlopen", lambda *a, **k: io.BytesIO(feed.encode()))
+    w = lambda t, a: {"display_name": t, "authorships": [{"author": {"display_name": a}}]}
+    assert o.arxiv_pdf(w("Federated Learning A Survey", "A. Lovelace")) == "https://arxiv.org/pdf/2103.00710v2"
+    assert o.arxiv_pdf(w("Federated Learning A Survey Extended", "Ada Lovelace")) is None  # judul beda
+    assert o.arxiv_pdf(w("Federated Learning A Survey", "Bob Smith")) is None  # penulis beda
+    monkeypatch.setattr(o.urllib.request, "urlopen", lambda *a, **k: 1 / 0)
+    assert o.arxiv_pdf(w("X", "Y Z")) is None  # jaringan gagal = tak ada pracetak, bukan crash
 
 def test_project_paths_and_validation(monkeypatch):
     import pytest
@@ -70,7 +97,6 @@ def test_papermeta(tmp_path):
          "abstract_inverted_index": {"hello": [0], "world": [1]}}
     m = pm.from_openalex(w)
     assert m["authors"] == "Ada L and Alan T" and m["doi"] == "10.1/X" and m["abstract"] == "hello world"
-    assert pm.from_ieee({"articleTitle": "<b>A</b>", "publicationYear": "2024", "authors": [{"preferredName": "X Y"}]})["title"] == "A"
     assert pm.from_filename("2021_W9_Some Title.pdf")["year"] == 2021
     assert pm.from_filename("odd name.pdf")["title"] == "odd name"
     assert pm.find_doi("see https://doi.org/10.1109/ACCESS.2024.3446619.") == "10.1109/access.2024.3446619"
@@ -121,6 +147,7 @@ def test_evidence_cite_and_select():
     from skripsi_ai import evidence as ev
     assert ev.cite({"authors": "Fupeng Wei and Xing Liu and L Pan", "year": 2025, "page": 6}) == "Wei dkk. 2025, hlm. 6"
     assert ev.cite({"authors": "Ada Lovelace and Alan Turing", "year": 2021, "page": 0}) == "Lovelace dan Turing 2021, abstrak"
+    assert ev.cite({"authors": "Ada Lovelace", "year": 2021, "page": 2, "version": "pracetak"}) == "Lovelace 2021, hlm. 2 (pracetak)"
     assert ev.cite({"authors": "", "year": 0, "page": 3, "title": "Judul X", "file": "f.pdf"}) == "Judul X t.t., hlm. 3"
     refs = "[3] Lo WW et al (2020) In: Proceedings of X, pp 1-9. [4] Kim 2019 vol. 3 [5] Lee 2018 [6] Roe 2017"
     assert ev.is_reference_list(refs) and not ev.is_reference_list("The model was trained in 2021 on data.")

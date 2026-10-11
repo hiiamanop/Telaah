@@ -46,7 +46,8 @@ def ingest_one(col, f, pages, meta):
         return 0
     vecs = embed_all([t for _, t in items])
     base = {"file": f, "title": meta.get("title") or "", "authors": meta.get("authors") or "",
-            "year": meta.get("year") or 0, "doi": meta.get("doi") or ""}
+            "year": meta.get("year") or 0, "doi": meta.get("doi") or "",
+            "version": meta.get("version") or ""}
     col.add(ids=[f"{f}#{i}" for i in range(len(items))], embeddings=vecs,
             documents=[t for _, t in items],
             metadatas=[{**base, "chunk": i, "page": p} for i, (p, _) in enumerate(items)])

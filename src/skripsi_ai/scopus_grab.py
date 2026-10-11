@@ -73,7 +73,7 @@ class ScopusGrabber(BaseGrabber):
         ok = skip = fail = nopdf = 0
         for n, doi in enumerate(dois, 1):
             w = works.get(doi)
-            urls = oa.pdf_urls(w) if w else []
+            urls = oa.candidates(w) if w else []
             if not urls:
                 nopdf += 1
                 continue
@@ -84,7 +84,7 @@ class ScopusGrabber(BaseGrabber):
             for url in urls:
                 try:
                     oa.download(url, path)
-                    papermeta.save(path, papermeta.from_openalex(w))
+                    oa.save_meta(w, path, url)
                     ok += 1
                     print(f"[{n}] OK   {os.path.basename(path)}")
                     break

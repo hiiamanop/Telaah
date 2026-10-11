@@ -141,31 +141,28 @@ def test_real_tools_decision_requires_answer_and_confirm(env):
     assert "fokus NYT" in mem.working_memory()
 
 
-def test_cari_dan_unduh_semua_routes_ieee_then_openalex_without_ieee(env, monkeypatch):
+def test_cari_dan_unduh_semua_uses_openalex_only_and_survives_failure(env, monkeypatch):
     proj, mem, sid = env
     seen = []
 
     class Fake:
-        def __init__(self, name, fail=False):
-            self.name, self.fail = name, fail
+        def __init__(self, fail=False):
+            self.fail = fail
 
         def run(self, q, out, n, **kw):
-            seen.append((self.name, q, n, kw))
+            seen.append((q, n, kw))
             if self.fail:
                 raise RuntimeError("diblokir")
             return 2, 1, 0
 
-    monkeypatch.setattr(agent, "IeeeGrabber", lambda: Fake("ieee"))
-    monkeypatch.setattr(agent, "OpenAlexGrabber", lambda: Fake("openalex"))
+    monkeypatch.setattr(agent, "OpenAlexGrabber", lambda: Fake())
     fn = {t.name: t for t in agent.build_tools(proj, mem, sid)}["cari_dan_unduh"].fn
     out = fn("gnn", n=5)
-    assert seen == [("ieee", "gnn", 5, {}), ("openalex", "gnn", 5, {"skip_ieee": True})]
-    assert "ieee: baru=2" in out and "openalex: baru=2" in out
-    seen.clear()
-    monkeypatch.setattr(agent, "IeeeGrabber", lambda: Fake("ieee", fail=True))
-    out = fn("gnn")  # IEEE gagal, OpenAlex tetap jalan
-    assert "ieee: GAGAL (diblokir)" in out and "openalex: baru=2" in out and [x[0] for x in seen] == ["ieee", "openalex"]
-
+    assert seen == [("gnn", 5, {})] and "openalex: baru=2" in out and "ieee" not in out
+    with pytest.raises(ValueError):  # IEEE bukan lagi sumber
+        fn("gnn", sumber="ieee")
+    monkeypatch.setattr(agent, "OpenAlexGrabber", lambda: Fake(fail=True))
+    assert "openalex: GAGAL (diblokir)" in fn("gnn")
 
 def test_scope_rule_stays_in_system_prompt():
     # perilaku sebenarnya diukur dengan tests/eval_scope.py (LLM sungguhan); ini cuma menjaga aturannya tak terhapus
