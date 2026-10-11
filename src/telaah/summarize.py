@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Ringkas tiap PDF -> CSV matriks literatur. Resume otomatis via CSV.
 
-Pakai:  python -m skripsi_ai.summarize [-p proyek] [-n maks] [--redo]
+Pakai:  python -m telaah.summarize [-p proyek] [-n maks] [--redo]
 """
 import argparse
 import csv

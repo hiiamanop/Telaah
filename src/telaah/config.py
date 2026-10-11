@@ -1,4 +1,4 @@
-"""Config RAG: baca .env via stdlib; kunci OpenRouter dari env/.env, atau dari `skripsi-ai --login`."""
+"""Config RAG: baca .env via stdlib; kunci OpenRouter dari env/.env, atau dari `telaah --login`."""
 import os
 import re
 

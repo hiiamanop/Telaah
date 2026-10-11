@@ -4,7 +4,7 @@
 Tiap chunk membawa metadata paper (judul, penulis, tahun, DOI) dan nomor halaman.
 Abstrak (bila ada) jadi chunk tambahan dengan page=0.
 
-Pakai:  python -m skripsi_ai.ingest [-p proyek] [-n maks] [--reindex]
+Pakai:  python -m telaah.ingest [-p proyek] [-n maks] [--reindex]
 """
 import argparse
 import os

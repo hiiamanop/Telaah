@@ -5,7 +5,7 @@ import urllib.parse
 import urllib.request
 
 API = "https://api.crossref.org/works"
-UA = "SkripsiAI/1.0 (mailto:research@example.com)"
+UA = "Telaah/1.0 (mailto:research@example.com)"
 
 
 def lookup(title, year=None):

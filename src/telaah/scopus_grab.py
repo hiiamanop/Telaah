@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Cari artikel open access via Scopus (termasuk Elsevier), unduh PDF-nya via OpenAlex per DOI.
 
-Pakai:  python -m skripsi_ai.scopus_grab "<teks | query Scopus>" [-p proyek] [-n maks] [-d delay]
+Pakai:  python -m telaah.scopus_grab "<teks | query Scopus>" [-p proyek] [-n maks] [-d delay]
 Perlu ELSEVIER_API_KEY. Key non-institusi hanya boleh Scopus Search (25 hasil/halaman, tanpa abstrak,
 tanpa full text Elsevier); PDF diambil dari lokasi OA di OpenAlex, sekitar 60% artikel punya.
 """
